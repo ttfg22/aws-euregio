@@ -40,6 +40,7 @@ async function showStations(url) {
     let jsondata = await response.json()
 
     // Wetterstationen mit Icons und Popups implementieren
+    // PROBLEM: Um eine Rundung der Werte der Windgeschwindigkeit zu erreichen, wurde die FixedTo() Funktion eingebaut. Wenn keine Messwerte vorhanden sind, wird jedoch 'NaN' angezeigt, anstatt der festgelegten Fehlermeldung 
     L.geoJSON(jsondata, {
         pointToLayer: function (feature, latlng) {
             return L.marker(latlng, {
@@ -56,16 +57,13 @@ async function showStations(url) {
             console.log(mas)
             layer.bindPopup(`
                 <h1>${prop.name}, ${mas} m ü.A. </h1><ul>
-                    <li>Lufttemperatur (Grad Celsius °): ${prop.LT || "keine Messungen vorhanden"} </li>
+                    <li>Lufttemperatur (Grad °): ${prop.LT || "keine Messungen vorhanden"} </li>
                     <li>relative Luftfeuchte (%): ${prop.RH || "keine Messungen vorhanden"} </li>
-                    <li>Windgeschwindigkeit (km/h): ${prop.WG || "keine Messungen vorhanden"}</li>
-                    <li>Schneehöhe (cm): ${prop.WG || "keine Messungen vorhanden"}</li>
+                    <li>Windgeschwindigkeit (km/h): ${Number(prop.WG/3.6).toFixed(2)|| "keine Messungen vorhanden"}</li>
+                    <li>Schneehöhe (cm): ${prop.HS || "keine Messungen vorhanden"}</li>
                 </ul></> 
             `);
         }
     }).addTo(themaLayer.stations)
 }
 showStations("https://static.avalanche.report/weather_stations/stations.geojson");
-
-
-
