@@ -37,19 +37,35 @@ L.control.scale({
 // Darstellung der Wetterstationen
 async function showStations(url) {
     let response = await fetch(url);
-    let jsondata = await response.json();
+    let jsondata = await response.json()
 
     // Wetterstationen mit Icons und Popups implementieren
-    L.geojson(jsondata,{
-        pointToLayer: function(feature,latlong){
-            return L.marker(latlng,{
-                icon({
-                    iconURL = "icons/wifi.png",
-                    iconAnchor = [16, 37],
-                    popupAnchor = [0, -37]
+    L.geoJSON(jsondata, {
+        pointToLayer: function (feature, latlng) {
+            return L.marker(latlng, {
+                icon: L.icon({
+                    iconUrl: "icons/wifi.png",
+                    iconAnchor: [16, 37],
+                    popupAnchor: [0, -37]
                 })
             });
+        },
+        onEachFeature: function (feature, layer) {
+            let prop = feature.properties;
+            let mas = feature.geometry.coordinates[2]
+            console.log(mas)
+            layer.bindPopup(`
+                <h1>${prop.name}, ${mas} m ü.A. </h1><ul>
+                    <li>Lufttemperatur (Grad Celsius °): ${prop.LT || "keine Messungen vorhanden"} </li>
+                    <li>relative Luftfeuchte (%): ${prop.RH || "keine Messungen vorhanden"} </li>
+                    <li>Windgeschwindigkeit (km/h): ${prop.WG || "keine Messungen vorhanden"}</li>
+                    <li>Schneehöhe (cm): ${prop.WG || "keine Messungen vorhanden"}</li>
+                </ul></> 
+            `);
         }
-    })
+    }).addTo(themaLayer.stations)
 }
 showStations("https://static.avalanche.report/weather_stations/stations.geojson");
+
+
+
