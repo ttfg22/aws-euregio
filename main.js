@@ -32,6 +32,9 @@ let layerControl = L.control.layers({
     "Temperatur": themaLayer.temperature.addTo(map)
 }).addTo(map);
 
+//das Layer Kontroll pannel ist mit dieser Erweiterung immer geöffnet bei Öffnen der Website
+layerControl.expand()
+
 // Maßstab
 L.control.scale({
     imperial: false,
@@ -89,7 +92,7 @@ function writeTemperatureLayer(jsondata) {
                     // mit der classname option kriegt jedes Element die Klasse zugewiesen
                     className:"aws-div-icon",
                     //span ist ein Bereich, der nur für eine Zeile gilt
-                    html:`<span>${feature.properties.LT}</span>`
+                    html:`<span>${feature.properties.LT.toFixed(2)}</span>`
                 })
             });
         },
