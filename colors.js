@@ -1,5 +1,5 @@
 const COLORS = {
-    temperatur: [
+    temperature: [
         {
             min:-50,
             max:-25,

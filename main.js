@@ -40,6 +40,15 @@ L.control.scale({
     imperial: false,
 }).addTo(map);
 
+//
+function getColor(value,ramp){
+    for (let rule of ramp){
+        if(value >= rule.min && value < rule.max){
+            return rule.color;
+        }
+    }
+}
+console.log(getColor(-40,COLORS.temperature))
 // Funktion, die Wetterstationen mit Icons und Popups implemetiert
 function writeStationLayer(jsondata) {
     L.geoJSON(jsondata, {
@@ -63,7 +72,6 @@ function writeStationLayer(jsondata) {
                 WG = "-";
             }
             //let WG = (prop.WG)?(prop.WG*3.6).toFixed(1):"-";
-            console.log(mas)
             layer.bindPopup(`
             <h1>${prop.name}, ${mas} m ü.A. </h1><ul>
                 <li>Lufttemperatur (Grad °): ${prop.LT || "-"} </li>
@@ -87,12 +95,13 @@ function writeTemperatureLayer(jsondata) {
             }
         },
         pointToLayer: function (feature, latlng) {
+            let color = getColor(feature.properties.LT,COLORS.temperature)
             return L.marker(latlng, {
                 icon: L.divIcon({
                     // mit der classname option kriegt jedes Element die Klasse zugewiesen
                     className:"aws-div-icon",
                     //span ist ein Bereich, der nur für eine Zeile gilt
-                    html:`<span>${feature.properties.LT.toFixed(2)}</span>`
+                    html:`<span style="background-color:${color}">${feature.properties.LT.toFixed(2)}</span>`
                 })
             });
         },
