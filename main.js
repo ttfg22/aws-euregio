@@ -28,7 +28,7 @@ let layerControl = L.control.layers({
     "Esri WorldTopoMap": L.tileLayer.provider("Esri.WorldTopoMap"),
     "Esri WorldImagery": L.tileLayer.provider("Esri.WorldImagery")
 }, {
-    "Wetterstationen": themaLayer.stations.addTo(map),
+    "Wetterstationen": themaLayer.stations,
     "Temperatur": themaLayer.temperature.addTo(map)
 }).addTo(map);
 
@@ -74,11 +74,34 @@ function writeStationLayer(jsondata) {
     }).addTo(themaLayer.stations)
 }
 
+//Funktion, die Temperatur darstellt 
+function writeTemperatureLayer(jsondata) {
+    L.geoJSON(jsondata, {
+        // in der if Abfrage werden Daten vom feature abgefragt, wenn Bedingung stimmt wird ein true zurückgegeben, sodass der Filter dieses Objekt NICHT filtert
+        filter: function(feature){
+            if(feature.properties.LT > -50 && feature.properties.LT < 50){
+                return true
+            }
+        },
+        pointToLayer: function (feature, latlng) {
+            return L.marker(latlng, {
+                icon: L.divIcon({
+                    // mit der classname option kriegt jedes Element die Klasse zugewiesen
+                    className:"aws-div-icon",
+                    //span ist ein Bereich, der nur für eine Zeile gilt
+                    html:`<span>${feature.properties.LT}</span>`
+                })
+            });
+        },
+    }).addTo(themaLayer.temperature)
+}
+
 // Darstellung der Wetterstationen
 async function loadStations(url) {
     let response = await fetch(url);
-    let jsondata = await response.json()
-    writeStationLayer(jsondata)
+    let jsondata = await response.json();
+    writeStationLayer(jsondata);
+    writeTemperatureLayer(jsondata);
 }
 
 loadStations("https://static.avalanche.report/weather_stations/stations.geojson");
