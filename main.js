@@ -14,7 +14,8 @@ let map = L.map("map", {
 // thematische Layer
 let themaLayer = {
     stations: L.featureGroup(),
-    temperature: L.featureGroup()
+    temperature: L.featureGroup(),
+    wind:L.featureGroup()
 }
 
 // Hintergrundlayer
@@ -29,7 +30,8 @@ let layerControl = L.control.layers({
     "Esri WorldImagery": L.tileLayer.provider("Esri.WorldImagery")
 }, {
     "Wetterstationen": themaLayer.stations,
-    "Temperatur": themaLayer.temperature.addTo(map)
+    "Temperatur": themaLayer.temperature,
+    "Wind":themaLayer.wind
 }).addTo(map);
 
 //das Layer Kontroll pannel ist mit dieser Erweiterung immer geöffnet bei Öffnen der Website
@@ -48,7 +50,7 @@ function getColor(value,ramp){
         }
     }
 }
-console.log(getColor(-40,COLORS.temperature))
+
 // Funktion, die Wetterstationen mit Icons und Popups implemetiert
 function writeStationLayer(jsondata) {
     L.geoJSON(jsondata, {
@@ -108,12 +110,36 @@ function writeTemperatureLayer(jsondata) {
     }).addTo(themaLayer.temperature)
 }
 
+//Funktion, die Wind darstellt
+function writeWindLayer(jsondata) {
+    L.geoJSON(jsondata, {
+        // in der if Abfrage werden Daten vom feature abgefragt, wenn Bedingung stimmt wird ein true zurückgegeben, sodass der Filter dieses Objekt NICHT filtert
+        filter: function(feature){
+            if(feature.properties.WG >= 0 && feature.properties.WG < 150){
+                return true
+            }
+        },
+        pointToLayer: function (feature, latlng) {
+            let color = getColor((feature.properties.WG*3.6),COLORS.wind)
+            return L.marker(latlng, {
+                icon: L.divIcon({
+                    // mit der classname option kriegt jedes Element die Klasse zugewiesen
+                    className:"aws-div-icon",
+                    //span ist ein Bereich, der nur für eine Zeile gilt
+                    html:`<span style="background-color:${color}">${(feature.properties.WG*3.6).toFixed(2)}</span>`
+                })
+            });
+        },
+    }).addTo(themaLayer.wind)
+}
+
 // Darstellung der Wetterstationen
 async function loadStations(url) {
     let response = await fetch(url);
     let jsondata = await response.json();
     writeStationLayer(jsondata);
     writeTemperatureLayer(jsondata);
+    writeWindLayer(jsondata);
 }
 
 loadStations("https://static.avalanche.report/weather_stations/stations.geojson");
