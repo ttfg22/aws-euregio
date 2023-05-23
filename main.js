@@ -15,7 +15,8 @@ let map = L.map("map", {
 let themaLayer = {
     stations: L.featureGroup(),
     temperature: L.featureGroup(),
-    wind:L.featureGroup()
+    wind: L.featureGroup(),
+    schneehöhen: L.featureGroup()
 }
 
 // Hintergrundlayer
@@ -31,7 +32,8 @@ let layerControl = L.control.layers({
 }, {
     "Wetterstationen": themaLayer.stations,
     "Temperatur": themaLayer.temperature,
-    "Wind":themaLayer.wind
+    "Wind": themaLayer.wind,
+    "Schneehöhen": themaLayer.schneehöhen
 }).addTo(map);
 
 //das Layer Kontroll pannel ist mit dieser Erweiterung immer geöffnet bei Öffnen der Website
@@ -43,9 +45,9 @@ L.control.scale({
 }).addTo(map);
 
 //
-function getColor(value,ramp){
-    for (let rule of ramp){
-        if(value >= rule.min && value < rule.max){
+function getColor(value, ramp) {
+    for (let rule of ramp) {
+        if (value >= rule.min && value < rule.max) {
             return rule.color;
         }
     }
@@ -69,7 +71,7 @@ function writeStationLayer(jsondata) {
             let date_time = new Date(prop.date);
             let WG;
             if (prop.WG) {
-                WG = (prop.WG * 3.6).toFixed(1);
+                WG = (prop.WG).toFixed(1);
             } else {
                 WG = "-";
             }
@@ -91,19 +93,19 @@ function writeStationLayer(jsondata) {
 function writeTemperatureLayer(jsondata) {
     L.geoJSON(jsondata, {
         // in der if Abfrage werden Daten vom feature abgefragt, wenn Bedingung stimmt wird ein true zurückgegeben, sodass der Filter dieses Objekt NICHT filtert
-        filter: function(feature){
-            if(feature.properties.LT > -50 && feature.properties.LT < 50){
+        filter: function (feature) {
+            if (feature.properties.LT > -50 && feature.properties.LT < 50) {
                 return true
             }
         },
         pointToLayer: function (feature, latlng) {
-            let color = getColor(feature.properties.LT,COLORS.temperature)
+            let color = getColor(feature.properties.LT, COLORS.temperature)
             return L.marker(latlng, {
                 icon: L.divIcon({
                     // mit der classname option kriegt jedes Element die Klasse zugewiesen
-                    className:"aws-div-icon",
+                    className: "aws-div-icon",
                     //span ist ein Bereich, der nur für eine Zeile gilt
-                    html:`<span style="background-color:${color}">${feature.properties.LT.toFixed(2)}</span>`
+                    html: `<span style="background-color:${color}">${feature.properties.LT.toFixed(2)}</span>`
                 })
             });
         },
@@ -114,25 +116,47 @@ function writeTemperatureLayer(jsondata) {
 function writeWindLayer(jsondata) {
     L.geoJSON(jsondata, {
         // in der if Abfrage werden Daten vom feature abgefragt, wenn Bedingung stimmt wird ein true zurückgegeben, sodass der Filter dieses Objekt NICHT filtert
-        filter: function(feature){
-            if(feature.properties.WG >= 0 && feature.properties.WG < 150){
+        filter: function (feature) {
+            if (feature.properties.WG >= 0 && feature.properties.WG < 150) {
                 return true
             }
         },
         pointToLayer: function (feature, latlng) {
-            let color = getColor(feature.properties.WG,COLORS.wind)
+            let color = getColor(feature.properties.WG, COLORS.wind)
             return L.marker(latlng, {
                 icon: L.divIcon({
                     // mit der classname option kriegt jedes Element die Klasse zugewiesen
-                    className:"aws-div-icon",
+                    className: "aws-div-icon",
                     //span ist ein Bereich, der nur für eine Zeile gilt
-                    html:`<span style="background-color:${color}">${feature.properties.WG.toFixed(2)}</span>`
+                    html: `<span style="background-color:${color}">${feature.properties.WG.toFixed(2)}</span>`
                 })
             });
         },
     }).addTo(themaLayer.wind)
 }
 
+//Funktion, der deb Schneehöhenlayer darstellt
+function writeSchneehöhenLayer(jsondata) {
+    L.geoJSON(jsondata, {
+        // in der if Abfrage werden Daten vom feature abgefragt, wenn Bedingung stimmt wird ein true zurückgegeben, sodass der Filter dieses Objekt NICHT filtert
+        filter: function (feature) {
+            if (feature.properties.HS >= 0 && feature.properties.HS < 1000) {
+                return true
+            }
+        },
+        pointToLayer: function (feature, latlng) {
+            let color = getColor(feature.properties.HS, COLORS.schneehöhen)
+            return L.marker(latlng, {
+                icon: L.divIcon({
+                    // mit der classname option kriegt jedes Element die Klasse zugewiesen
+                    className: "aws-div-icon",
+                    //span ist ein Bereich, der nur für eine Zeile gilt
+                    html: `<span style="background-color:${color}">${feature.properties.HS.toFixed(2)}</span>`
+                })
+            });
+        },
+    }).addTo(themaLayer.schneehöhen)
+}
 // Darstellung der Wetterstationen
 async function loadStations(url) {
     let response = await fetch(url);
@@ -140,6 +164,7 @@ async function loadStations(url) {
     writeStationLayer(jsondata);
     writeTemperatureLayer(jsondata);
     writeWindLayer(jsondata);
+    writeSchneehöhenLayer(jsondata);
 }
 
 loadStations("https://static.avalanche.report/weather_stations/stations.geojson");
